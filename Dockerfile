@@ -15,4 +15,20 @@ ENV GOPATH /go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
-WORKDIR $GOPATH
+RUN apt-get update && apt-get install apt-utils tini git curl vagrant build-essential -y
+RUN apt-get install wget cmake g++ pkg-config git vim-common libwebsockets-dev libjson-c-dev libssl-dev -y && \
+    git clone https://github.com/tsl0922/ttyd.git && \
+    cd ttyd && mkdir build && cd build && \
+    cmake .. && \
+    make && make install
+
+RUN apt-get install virtualbox -y
+
+RUN vagrant plugin install vagrant-libvirt
+
+EXPOSE 7681
+WORKDIR /root
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["ttyd", "-W", "bash"]
+
